@@ -9,22 +9,53 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #F4F6F7; /* 浅灰蓝色背景 */
+            background-color: #F4F6F7;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #34495E; /* 深灰蓝色文字 */
+            color: #34495E;
         }
 
         h1 {
-            color: #2C3E50; /* 深蓝色标题 */
+            color: #2C3E50;
             margin-bottom: 20px;
             text-align: center;
             font-weight: 700;
             letter-spacing: 1px;
             font-size: 2.5rem;
+        }
+
+        /* Tabs container */
+        #tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* Each tab */
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #ECF0F1;
+            color: #34495E;
+            border: 1px solid #BDC3C7;
+            border-radius: 5px;
+            margin: 0 5px;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Hover effect for tabs */
+        .tab:hover {
+            background-color: #BDC3C7;
+        }
+
+        /* Active tab */
+        .tab.active {
+            background-color: #2C3E50;
+            color: #fff;
         }
 
         #chart-container {
@@ -34,7 +65,7 @@
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 加强阴影效果 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         #data-container {
@@ -44,7 +75,7 @@
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 加强阴影效果 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         #data-table {
@@ -60,42 +91,26 @@
         }
 
         #data-table th {
-            background-color: #2C3E50; /* 深蓝色表头 */
+            background-color: #2C3E50;
             color: #ffffff;
             font-weight: 700;
         }
 
         #data-table tr:nth-child(even) {
-            background-color: #ECF0F1; /* 浅灰蓝色偶数行 */
+            background-color: #ECF0F1;
         }
 
         #data-table tr:hover {
-            background-color: #F39C12; /* 橙金色悬停效果 */
-            color: #ffffff; /* 悬停时白色字体 */
+            background-color: #F39C12;
+            color: #ffffff;
             cursor: pointer;
         }
 
         #data-table td:last-child {
-            color: #E74C3C; /* 红色电量数据 */
+            color: #E74C3C;
             font-weight: 700;
         }
 
-        #refresh-btn {
-            background-color: #2C3E50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-        }
-
-        #refresh-btn:hover {
-            background-color: #34495E;
-        }
-
-        /* Responsive styling */
         @media (max-width: 768px) {
             #chart-container, #data-container {
                 width: 95%;
@@ -107,7 +122,6 @@
             }
         }
 
-        /* Chart styling */
         .g2-tooltip {
             border: 1px solid #ddd;
             background-color: #fff;
@@ -120,8 +134,12 @@
 
     <h1>18-321宿舍电量监控</h1>
 
-    <!-- Refresh button -->
-    <button id="refresh-btn" onclick="refreshData()">刷新数据</button>
+    <!-- Tabs for time range selection -->
+    <div id="tabs">
+        <div class="tab active" data-range="week" onclick="updateChart('week')">1周</div>
+        <div class="tab" data-range="month" onclick="updateChart('month')">1个月</div>
+        <div class="tab" data-range="year" onclick="updateChart('year')">1年</div>
+    </div>
 
     <!-- Chart container -->
     <div id="chart-container"></div>
@@ -148,62 +166,103 @@
         const { Line } = G2Plot;
 
         // Initialize the chart
-        const linePlot = new Line('chart-container', {
-            data,
-            xField: 'time',
-            yField: 'kWh',
-            smooth: true,
-            tooltip: {
-                shared: true,
-                showCrosshairs: true,
-                crosshairs: {
-                    type: 'x',
-                },
-            },
-            slider: {
-                start: 0,
-                end: 1,
-            },
-            legend: {
-                position: 'top',
-            },
-            color: ['#2C3E50'],  // 深蓝色线条
-            point: {
-                size: 3,
-                shape: 'circle',
-                style: {
-                    fill: '#2C3E50',
-                    stroke: '#2C3E50',
-                    lineWidth: 1,
-                },
-            },
-            lineStyle: {
-                stroke: '#2C3E50',
-                lineWidth: 2,
-            },
-            xAxis: {
-                line: { style: { stroke: '#2C3E50' } },
-                label: { style: { fill: '#34495E' } },
-            },
-            yAxis: {
-                line: { style: { stroke: '#2C3E50' } },
-                label: { style: { fill: '#34495E' } },
-                grid: {
-                    line: { style: { stroke: '#ddd', lineWidth: 1 } }
+        let linePlot;
+
+        // Function to filter data based on time range
+        function filterData(range) {
+            const now = new Date();
+            let filteredData;
+
+            if (range === 'week') {
+                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filteredData = data.filter(item => new Date(item.time) >= oneWeekAgo);
+            } else if (range === 'month') {
+                const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                filteredData = data.filter(item => new Date(item.time) >= oneMonthAgo);
+            } else if (range === 'year') {
+                const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                filteredData = data.filter(item => new Date(item.time) >= oneYearAgo);
+            }
+
+            return filteredData;
+        }
+
+        // Function to update chart and table based on selected time range
+        function updateChart(range) {
+            // Filter data
+            const filteredData = filterData(range);
+
+            // Update chart
+            if (linePlot) {
+                linePlot.changeData(filteredData);
+            } else {
+                linePlot = new Line('chart-container', {
+                    data: filteredData,
+                    xField: 'time',
+                    yField: 'kWh',
+                    smooth: true,
+                    tooltip: {
+                        shared: true,
+                        showCrosshairs: true,
+                        crosshairs: {
+                            type: 'x',
+                        },
+                    },
+                    slider: {
+                        start: 0,
+                        end: 1,
+                    },
+                    legend: {
+                        position: 'top',
+                    },
+                    color: ['#2C3E50'],
+                    point: {
+                        size: 3,
+                        shape: 'circle',
+                        style: {
+                            fill: '#2C3E50',
+                            stroke: '#2C3E50',
+                            lineWidth: 1,
+                        },
+                    },
+                    lineStyle: {
+                        stroke: '#2C3E50',
+                        lineWidth: 2,
+                    },
+                    xAxis: {
+                        line: { style: { stroke: '#2C3E50' } },
+                        label: { style: { fill: '#34495E' } },
+                    },
+                    yAxis: {
+                        line: { style: { stroke: '#2C3E50' } },
+                        label: { style: { fill: '#34495E' } },
+                        grid: {
+                            line: { style: { stroke: '#ddd', lineWidth: 1 } }
+                        }
+                    },
+                });
+
+                linePlot.render();
+            }
+
+            // Update table with filtered data
+            populateTable(filteredData);
+            
+            // Update active tab
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.range === range) {
+                    tab.classList.add('active');
                 }
-            },
-        });
+            });
+        }
 
-        linePlot.render();
-
-        // Populate the table with data
+        // Function to populate table with data
         const tableBody = document.querySelector('#data-table tbody');
-        
         function populateTable(data) {
-            // Reverse and limit the data to show recent entries first
-            const recentData = data.slice(-10).reverse();
             tableBody.innerHTML = '';  // Clear existing rows
-            recentData.forEach((item, index) => {
+            data.slice(-10).reverse().forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
@@ -214,12 +273,10 @@
             });
         }
 
-        function refreshData() {
-            // Simulate data refresh
-            populateTable(data);
-        }
-
-        populateTable(data);  // Fill the table with data
+        // Initial chart and table rendering
+        document.addEventListener('DOMContentLoaded', () => {
+            updateChart('week');  // Render default (1周)
+        });
     </script>
 
 </body>
