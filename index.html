@@ -9,7 +9,7 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #F7F9FC;
+            background-color: #F4F6F7; /* 浅灰蓝色背景 */
             margin: 0;
             padding: 0;
             display: flex;
@@ -17,11 +17,11 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            color: #000000; /* 黑色文字 */
+            color: #34495E; /* 深灰蓝色文字 */
         }
 
         h1 {
-            color: #000000; /* 黑色标题 */
+            color: #2C3E50; /* 深蓝色标题 */
             margin-bottom: 20px;
             text-align: center;
             font-weight: 700;
@@ -36,6 +36,7 @@
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 轻微阴影提升层次感 */
         }
 
         #data-table {
@@ -53,17 +54,17 @@
         }
 
         #data-table th {
-            background-color: #000000; /* 黑色表头 */
+            background-color: #2C3E50; /* 深蓝色表头 */
             color: #ffffff;
             font-weight: 700;
         }
 
         #data-table tr:nth-child(even) {
-            background-color: #f7f7f7; /* 更淡的灰度，简洁 */
+            background-color: #F4F6F7; /* 浅灰蓝色偶数行 */
         }
 
         #data-table tr:hover {
-            background-color: #FF6B6B; /* 亮红色的悬停效果 */
+            background-color: #F39C12; /* 橙金色悬停效果 */
             color: #ffffff; /* 悬停时白色字体 */
             cursor: pointer;
         }
@@ -73,7 +74,7 @@
         }
 
         #data-table td:last-child {
-            color: #FF6B6B; /* 强调电量数据 */
+            color: #F39C12; /* 强调电量数据 */
             font-weight: 700;
         }
 
@@ -144,27 +145,27 @@
             legend: {
                 position: 'top',
             },
-            color: ['#000000'],  // 使用黑色线条，极简风格
+            color: ['#2C3E50'],  // 深蓝色线条
             point: {
-                size: 4,
+                size: 3,  // 小一点的实心点，避免密集数据显得混乱
                 shape: 'circle',
                 style: {
-                    fill: '#ffffff',  // 空心点
-                    stroke: '#FF6B6B',  // 红色边线
-                    lineWidth: 2,
+                    fill: '#2C3E50',  // 与线条同色
+                    stroke: '#2C3E50',  // 实心点
+                    lineWidth: 1,
                 },
             },
             lineStyle: {
-                stroke: '#000000',  // 黑色线条
+                stroke: '#2C3E50',  // 深蓝色线条
                 lineWidth: 2,
             },
             xAxis: {
-                line: { style: { stroke: '#000000' } },  // 黑色坐标轴
-                label: { style: { fill: '#000000' } },  // 黑色标签
+                line: { style: { stroke: '#2C3E50' } },  // 深蓝色坐标轴
+                label: { style: { fill: '#34495E' } },  // 深灰蓝色标签
             },
             yAxis: {
-                line: { style: { stroke: '#000000' } },  // 黑色坐标轴
-                label: { style: { fill: '#000000' } },  // 黑色标签
+                line: { style: { stroke: '#2C3E50' } },  // 深蓝色坐标轴
+                label: { style: { fill: '#34495E' } },  // 深灰蓝色标签
                 grid: {
                     line: { style: { stroke: '#ddd', lineWidth: 1 } }  // 浅灰色网格线
                 }
