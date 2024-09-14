@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,12 +11,10 @@
             font-family: 'Roboto', sans-serif;
             background-color: #F4F6F7; /* 浅灰蓝色背景 */
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             color: #34495E; /* 深灰蓝色文字 */
         }
 
@@ -26,25 +24,33 @@
             text-align: center;
             font-weight: 700;
             letter-spacing: 1px;
-            font-size: 2rem;
+            font-size: 2.5rem;
         }
 
-        #container {
-            width: 80%;
+        #chart-container {
+            width: 100%;
             max-width: 1000px;
-            margin: 20px auto;
+            margin: 20px 0;
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 轻微阴影提升层次感 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 加强阴影效果 */
+        }
+
+        #data-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 加强阴影效果 */
         }
 
         #data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
         }
 
         #data-table th, #data-table td {
@@ -60,7 +66,7 @@
         }
 
         #data-table tr:nth-child(even) {
-            background-color: #F4F6F7; /* 浅灰蓝色偶数行 */
+            background-color: #ECF0F1; /* 浅灰蓝色偶数行 */
         }
 
         #data-table tr:hover {
@@ -69,18 +75,29 @@
             cursor: pointer;
         }
 
-        #data-table td {
-            font-weight: 400;
+        #data-table td:last-child {
+            color: #E74C3C; /* 红色电量数据 */
+            font-weight: 700;
         }
 
-        #data-table td:last-child {
-            color: #F39C12; /* 强调电量数据 */
-            font-weight: 700;
+        #refresh-btn {
+            background-color: #2C3E50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        #refresh-btn:hover {
+            background-color: #34495E;
         }
 
         /* Responsive styling */
         @media (max-width: 768px) {
-            #container {
+            #chart-container, #data-container {
                 width: 95%;
             }
 
@@ -102,23 +119,28 @@
 <body>
 
     <h1>18-321宿舍电量监控</h1>
-    
-    <!-- Chart container -->
-    <div id="container"></div>
 
-    <!-- Data table -->
-    <table id="data-table">
-        <thead>
-            <tr>
-                <th>序号</th>
-                <th>时间</th>
-                <th>剩余电量 (kWh)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Table rows will be populated via JavaScript -->
-        </tbody>
-    </table>
+    <!-- Refresh button -->
+    <button id="refresh-btn" onclick="refreshData()">刷新数据</button>
+
+    <!-- Chart container -->
+    <div id="chart-container"></div>
+
+    <!-- Data table container -->
+    <div id="data-container">
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>时间</th>
+                    <th>剩余电量 (kWh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be populated via JavaScript -->
+            </tbody>
+        </table>
+    </div>
 
     <script type="text/javascript" src="https://unpkg.com/@antv/g2plot@latest/dist/g2plot.min.js"></script>
     <script src="./data.js"></script>
@@ -126,7 +148,7 @@
         const { Line } = G2Plot;
 
         // Initialize the chart
-        const linePlot = new Line('container', {
+        const linePlot = new Line('chart-container', {
             data,
             xField: 'time',
             yField: 'kWh',
@@ -147,27 +169,27 @@
             },
             color: ['#2C3E50'],  // 深蓝色线条
             point: {
-                size: 3,  // 小一点的实心点，避免密集数据显得混乱
+                size: 3,
                 shape: 'circle',
                 style: {
-                    fill: '#2C3E50',  // 与线条同色
-                    stroke: '#2C3E50',  // 实心点
+                    fill: '#2C3E50',
+                    stroke: '#2C3E50',
                     lineWidth: 1,
                 },
             },
             lineStyle: {
-                stroke: '#2C3E50',  // 深蓝色线条
+                stroke: '#2C3E50',
                 lineWidth: 2,
             },
             xAxis: {
-                line: { style: { stroke: '#2C3E50' } },  // 深蓝色坐标轴
-                label: { style: { fill: '#34495E' } },  // 深灰蓝色标签
+                line: { style: { stroke: '#2C3E50' } },
+                label: { style: { fill: '#34495E' } },
             },
             yAxis: {
-                line: { style: { stroke: '#2C3E50' } },  // 深蓝色坐标轴
-                label: { style: { fill: '#34495E' } },  // 深灰蓝色标签
+                line: { style: { stroke: '#2C3E50' } },
+                label: { style: { fill: '#34495E' } },
                 grid: {
-                    line: { style: { stroke: '#ddd', lineWidth: 1 } }  // 浅灰色网格线
+                    line: { style: { stroke: '#ddd', lineWidth: 1 } }
                 }
             },
         });
@@ -180,6 +202,7 @@
         function populateTable(data) {
             // Reverse and limit the data to show recent entries first
             const recentData = data.slice(-10).reverse();
+            tableBody.innerHTML = '';  // Clear existing rows
             recentData.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -189,6 +212,11 @@
                 `;
                 tableBody.appendChild(row);
             });
+        }
+
+        function refreshData() {
+            // Simulate data refresh
+            populateTable(data);
         }
 
         populateTable(data);  // Fill the table with data
