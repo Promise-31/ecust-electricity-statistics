@@ -103,6 +103,7 @@ except Exception as e:
 
 originstring = "[]"
 date = datetime.datetime.now().strftime("%Y-%m-%d")
+hour = datetime.datetime.now().strftime("%H:%M:%S")  # 获取当前时间的小时分钟秒
 
 # read from data.js preprocessed as json
 with suppress(FileNotFoundError):
@@ -114,7 +115,7 @@ except json.decoder.JSONDecodeError:
     logging.error("data.js 格式错误，请参考注意事项进行检查")
     exit(1)
 
-# add new data
+# add new data to data.js
 if data and (date in data[-1].values()):
     data[-1]["kWh"] = remain
 else:
@@ -126,4 +127,32 @@ if not DEBUG:
     Path("data.js").write_text("data=" + originstring, encoding="utf-8")
     logging.info("write back to data.js")
 
+
+# Now, update data_hour.js for hourly data
+hourly_data_entry = {
+    "time": f"{date} {hour}",  # Full timestamp with date and time
+    "kWh": remain
+}
+
+# Read existing data_hour.js or initialize an empty list
+hourly_data_string = "[]"
+with suppress(FileNotFoundError):
+    with open("data_hour.js", "r", encoding="utf-8") as f:
+        hourly_data_string = f.read().lstrip("data_hour=")
+try:
+    hourly_data: list = json.loads(hourly_data_string)
+except json.decoder.JSONDecodeError:
+    logging.error("data_hour.js 格式错误，请参考注意事项进行检查")
+    hourly_data = []
+
+# Append the new hourly data
+hourly_data.append(hourly_data_entry)
+
+# Write back to data_hour.js
+if not DEBUG:
+    hourly_data_string = json.dumps(hourly_data, indent=2, ensure_ascii=False)
+    Path("data_hour.js").write_text("data_hour=" + hourly_data_string, encoding="utf-8")
+    logging.info("write back to data_hour.js")
+
+# Push notification
 pushplus()
