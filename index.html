@@ -58,7 +58,8 @@
             color: #fff;
         }
 
-        #chart-container {
+        /* Chart containers */
+        .chart-container {
             width: 100%;
             max-width: 1000px;
             margin: 20px 0;
@@ -111,14 +112,48 @@
             font-weight: 700;
         }
 
+        /* Summary section */
+        #summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .summary-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            margin: 0 10px;
+            text-align: center;
+        }
+
+        .summary-box h2 {
+            font-size: 1.5rem;
+            color: #34495E;
+        }
+
+        .summary-box p {
+            font-size: 1.25rem;
+            color: #2C3E50;
+            font-weight: 700;
+        }
+
         @media (max-width: 768px) {
-            #chart-container, #data-container {
+            #chart-container, #data-container, .chart-container, #summary {
                 width: 95%;
             }
 
             #data-table th, #data-table td {
                 font-size: 14px;
                 padding: 8px;
+            }
+
+            .summary-box {
+                margin: 10px 0;
             }
         }
 
@@ -134,6 +169,18 @@
 
     <h1>18-321宿舍电量监控</h1>
 
+    <!-- Summary section -->
+    <div id="summary">
+        <div class="summary-box">
+            <h2>本周用电量</h2>
+            <p id="weekly-consumption">0 kWh</p>
+        </div>
+        <div class="summary-box">
+            <h2>本月用电量</h2>
+            <p id="monthly-consumption">0 kWh</p>
+        </div>
+    </div>
+
     <!-- Tabs for time range selection -->
     <div id="tabs">
         <div class="tab active" data-range="week" onclick="updateChart('week')">1周</div>
@@ -141,8 +188,14 @@
         <div class="tab" data-range="year" onclick="updateChart('year')">1年</div>
     </div>
 
-    <!-- Chart container -->
-    <div id="chart-container"></div>
+    <!-- Line chart container for daily data -->
+    <div id="chart-container" class="chart-container"></div>
+
+    <!-- Bar chart container for monthly average data -->
+    <div id="monthly-bar-chart" class="chart-container"></div>
+
+    <!-- Bar chart container for weekly average data -->
+    <div id="weekly-bar-chart" class="chart-container"></div>
 
     <!-- Data table container -->
     <div id="data-container">
@@ -163,9 +216,9 @@
     <script type="text/javascript" src="https://unpkg.com/@antv/g2plot@latest/dist/g2plot.min.js"></script>
     <script src="./data.js"></script>
     <script>
-        const { Line } = G2Plot;
+        const { Line, Column } = G2Plot;
 
-        // Initialize the chart
+        // Initialize the line chart
         let linePlot;
 
         // Function to filter data based on time range
@@ -185,6 +238,11 @@
             }
 
             return filteredData;
+        }
+
+        // Function to calculate total consumption for a given time range
+        function calculateTotalConsumption(filteredData) {
+            return filteredData.reduce((acc, item) => acc + item.kWh, 0).toFixed(2);
         }
 
         // Function to update chart and table based on selected time range
@@ -247,7 +305,14 @@
 
             // Update table with filtered data
             populateTable(filteredData);
-            
+
+            // Update total consumption values
+            if (range === 'week') {
+                document.getElementById('weekly-consumption').innerText = calculateTotalConsumption(filteredData) + ' kWh';
+            } else if (range === 'month') {
+                document.getElementById('monthly-consumption').innerText = calculateTotalConsumption(filteredData) + ' kWh';
+            }
+
             // Update active tab
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => {
@@ -273,9 +338,68 @@
             });
         }
 
+        // Function to calculate weekly and monthly average consumption
+        function calculateAverages(data, interval) {
+            const now = new Date();
+            let groups = {};
+            let timeKey;
+
+            data.forEach(item => {
+                const date = new Date(item.time);
+                if (interval === 'week') {
+                    const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
+                    timeKey = weekStart.toISOString().split('T')[0];
+                } else if (interval === 'month') {
+                    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                    timeKey = monthKey;
+                }
+                
+                if (!groups[timeKey]) {
+                    groups[timeKey] = { total: 0, count: 0 };
+                }
+                groups[timeKey].total += item.kWh;
+                groups[timeKey].count += 1;
+            });
+
+            return Object.keys(groups).map(key => ({
+                time: key,
+                avgKWh: (groups[key].total / groups[key].count).toFixed(2)
+            }));
+        }
+
+        // Function to render a bar chart
+        function renderBarChart(containerId, data, xField, yField, title) {
+            new Column(containerId, {
+                data,
+                xField,
+                yField,
+                label: {
+                    position: 'middle',
+                    style: {
+                        fill: '#fff',
+                        opacity: 0.6,
+                    },
+                },
+                meta: {
+                    [xField]: { alias: title },
+                    [yField]: { alias: '平均用电量 (kWh)' }
+                },
+                color: '#3498DB',
+                columnStyle: {
+                    radius: [4, 4, 0, 0],
+                },
+            }).render();
+        }
+
         // Initial chart and table rendering
         document.addEventListener('DOMContentLoaded', () => {
             updateChart('week');  // Render default (1周)
+
+            // Render monthly and weekly average bar charts
+            const monthlyAverages = calculateAverages(data, 'month');
+            const weeklyAverages = calculateAverages(data, 'week');
+            renderBarChart('monthly-bar-chart', monthlyAverages, 'time', 'avgKWh', '月份');
+            renderBarChart('weekly-bar-chart', weeklyAverages, 'time', 'avgKWh', '周');
         });
     </script>
 
