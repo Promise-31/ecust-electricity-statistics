@@ -382,11 +382,17 @@
                 },
                 meta: {
                     [xField]: { alias: title },
-                    [yField]: { alias: '平均用电量 (kWh)' }
+                    [yField]: { alias: '平均用电量 (kWh)', type: 'linear' },  // 确保 y 轴是线性数值型
                 },
                 color: '#3498DB',
                 columnStyle: {
                     radius: [4, 4, 0, 0],
+                },
+                yAxis: {
+                    tickInterval: 10,  // 设置合理的刻度间隔
+                    label: {
+                        formatter: (value) => `${value} kWh`,  // 格式化 y 轴刻度
+                    },
                 },
             }).render();
         }
